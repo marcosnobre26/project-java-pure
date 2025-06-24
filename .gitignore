@@ -1,0 +1,43 @@
+# Compiled class files
+*.class
+
+# Package Files
+*.jar
+*.war
+*.ear
+
+# IDE specific files
+.metadata/
+.project
+.classpath
+.settings/
+*.log
+*.bak
+*.iml
+.idea/
+.vscode/
+
+# Build artifacts
+bin/
+target/
+build/
+
+# Maven/Gradle cache (if used)
+.m2/
+.gradle/
+
+# Log files
+logs/
+*.log
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Database specific files (if any created by your DB tool directly in project)
+*.db
+*.sqlite
+*.sql.log
+
+# Liquibase specific (if any generated outside db/changelog)
+# changelog.csv
