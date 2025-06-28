@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Inclui outro changelog XML -->
+    <include file="v1.0.0-initial-schema.xml" relativeToChangelogFile="true"/>
+
+    <!-- Executa um arquivo SQL com criação de tabelas -->
+    <changeSet id="1" author="marco">
+        <sqlFile path="v1.0.0-create-tables.sql"
+                 relativeToChangelogFile="true"
+                 stripComments="true"
+                 endDelimiter=";"
+                 splitStatements="true"/>
+    </changeSet>
+
+    <!-- Executa outro SQL para alterar uma tabela -->
+    <changeSet id="2" author="marco">
+        <sqlFile path="v1.0.1-add-price-to-games.sql"
+                 relativeToChangelogFile="true"
+                 stripComments="true"
+                 endDelimiter=";"
+                 splitStatements="true"/>
+    </changeSet>
+
+</databaseChangeLog>

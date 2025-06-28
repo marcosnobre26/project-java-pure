@@ -1,0 +1,8 @@
+{
+  "accuracy": 0.85,
+  "f1_score": 0.82,
+  "precision": 0.87,
+  "recall": 0.78,
+  "model_name": "RandomForest",
+  "timestamp": "2025-06-27T22:30:00Z"
+}

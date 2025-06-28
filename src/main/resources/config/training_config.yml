@@ -1,0 +1,36 @@
+# src/main/resources/config/training_config.yml
+
+# Tipo de modelo de aprendizado de máquina a ser utilizado.
+# Deve corresponder à lógica no seu ModelTrainerService ou na MLApplication.
+# Ex: J48, RandomForest, NaiveBayes, SMO (para SVM), etc.
+# Certifique-se de que o nome aqui está alinhado com as classes Weka que você pretende usar.
+modelType: J48
+
+# Opções e parâmetros específicos para o modelo configurado.
+# São passados como argumentos de linha de comando para o método setOptions() do classificador Weka.
+# Para J48, "-C" é o Confidence Factor e "-M" é o Minimum Number of Objects per Leaf.
+# Verifique a documentação do Weka para as opções do seu modelo específico.
+modelOptions:
+  - "-C"
+  - "0.25"
+  - "-M"
+  - "2"
+  # Adicione mais opções conforme a necessidade do seu modelo.
+  # Exemplo para RandomForest (apenas para ilustrar, não use com J48):
+  # - "-I" # Número de árvores
+  # - "100"
+  # - "-K" # Número de atributos por nó
+  # - "0" # 0 = sqrt(num_attributes)
+
+# Caminho completo e nome do arquivo onde o modelo treinado (serializado) será salvo.
+# É uma boa prática incluir o tipo de modelo no nome do arquivo (ex: weka-j48-model.ser).
+# O diretório 'target/model/' deve ser criado se ainda não existir.
+modelOutputPath: target/model/weka-j48-model.ser
+
+# --- Configurações de Avaliação (Opcional, se você as tiver implementado) ---
+# Se sua aplicação inclui lógica para validação cruzada, você pode configurá-la aqui.
+# crossValidationFolds: 10 # Número de folds para validação cruzada.
+# evaluationMetric: F_MEASURE # Métrica principal para avaliação (ex: F_MEASURE, ACCURACY, PRECISION, RECALL).
+
+# --- Outras configurações (Opcional, dependendo da sua implementação) ---
+# randomSeed: 42 # Semente para geradores de números aleatórios (para reprodutibilidade).

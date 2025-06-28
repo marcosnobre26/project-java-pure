@@ -1,0 +1,62 @@
+# Configurações Gerais da Aplicação
+application:
+  name: "MeuProjetoMLJava"
+  version: "1.0.0"
+  logLevel: "INFO" # Nível de log: DEBUG, INFO, WARN, ERROR
+
+# Configurações de Dados
+data:
+  # Caminho para os dados brutos. Se vier do DB, pode ser o nome da tabela ou query.
+  rawPath: "file:/caminho/para/seus/dados/raw_data.csv"
+  # OU, se for de banco de dados (exemplo hipotético)
+  # database:
+  #   url: "jdbc:postgresql://localhost:5432/seubanco"
+  #   username: "seu_usuario"
+  #   password: "sua_senha"
+  #   query: "SELECT * FROM sua_tabela_de_dados_brutos"
+
+  # Caminho para os dados processados (onde serão salvos ou carregados)
+  processedPath: "file:/caminho/para/seus/dados/processed_data.parquet"
+  # Configurações específicas de carregamento/salvamento de dados
+  format: "CSV" # Ou PARQUET, JSON, JDBC etc.
+  separator: "," # Para CSV, o separador de colunas
+  header: true # Se o arquivo CSV tem cabeçalho
+  targetColumn: "target_variable" # Nome da coluna que você quer prever
+
+# Configurações de Engenharia de Features
+features:
+  # Lista de colunas para usar como features
+  inputColumns:
+    - "feature_col_1"
+    - "feature_col_2"
+    - "feature_col_3"
+  # Se precisar de codificação one-hot ou escalonamento
+  categoricalFeatures:
+    - "categoria_1"
+  numericalFeatures:
+    - "numerico_1"
+  # Opções para pré-processadores
+  scalingMethod: "StandardScaler" # Ou "MinMaxScaler", "None"
+  handleMissingValues: "mean" # Ou "median", "drop", "imputer"
+
+# Configurações do Modelo
+model:
+  name: "RandomForestClassifier" # Nome do algoritmo de ML a ser usado
+  type: "classification" # Ou "regression", "clustering"
+  # Caminho onde o modelo treinado será salvo/carregado
+  outputPath: "file:/caminho/para/seus/modelos/trained_model.ser" # Ou .zip, .pmml etc.
+  # Hiperparâmetros do modelo
+  hyperparameters:
+    numTrees: 100 # Para Random Forest
+    maxDepth: 10
+    seed: 42 # Para reprodutibilidade
+
+# Configurações de Treinamento
+training:
+  splitRatio: 0.8 # Proporção para treino/teste (80% treino, 20% teste)
+  evaluationMetric: "accuracy" # Métrica para avaliar o modelo: "accuracy", "f1_score", "rmse" etc.
+
+# Configurações de Serviço (se você for expor o modelo como uma API)
+service:
+  port: 8080 # Porta para a API
+  endpoint: "/predict" # Endpoint para as previsões

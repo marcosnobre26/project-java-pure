@@ -1,0 +1,38 @@
+# src/main/resources/config/feature_config.yml
+
+# Configurações para tratamento de valores ausentes
+replaceMissingValues: true # true para substituir, false para não
+
+# Configurações para normalização/padronização de features numéricas
+standardizeNumeric: true # true para padronizar (Z-score), false para não
+
+# Configurações para codificação de features categóricas
+oneHotEncodeCategorical: true # true para aplicar One-Hot Encoding, false para não
+categoricalEncoding: ONE_HOT_ENCODING # Deve ser uma STRING simples.
+                                      # Use "ONE_HOT_ENCODING" se você implementou isso.
+                                      # Se for usar outra estratégia no futuro (ex: "ORDINAL_ENCODING"),
+                                      # o valor aqui deve corresponder à sua lógica.
+
+# Lista das features numéricas do seu dataset que devem ser processadas
+# IMPORTANTÍSSIMO: Adapte estes nomes para as COLUNAS NUMÉRICAS REAIS do seu arquivo CSV (ex: adult_train.csv)
+numericalFeatures:
+  - age
+  - fnlwgt
+  - education_num
+  - capital_gain
+  - capital_loss
+  - hours_per_week
+
+# Lista das features categóricas do seu dataset que devem ser processadas
+# IMPORTANTÍSSIMO: Adapte estes nomes para as COLUNAS CATEGÓRICAS REAIS do seu arquivo CSV (ex: adult_train.csv)
+categoricalFeatures:
+  - workclass
+  - education
+  - marital_status
+  - occupation
+  - relationship
+  - race
+  - sex
+  - native_country
+
+# Nota: O campo 'targetFeatureName' NÃO deve estar aqui, pois a coluna alvo é definida no data_config.yml

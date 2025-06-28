@@ -1,0 +1,12 @@
+# Configurações Gerais da Aplicação
+applicationName: MyMachineLearningPureJavaApp # Nome da sua aplicação
+logLevel: INFO # Nível de log (INFO, DEBUG, WARNING, SEVERE)
+
+# Caminhos para os arquivos de configuração específicos
+# Estes caminhos são relativos à pasta 'src/main/resources/' ou ao classpath
+# (ou podem ser caminhos absolutos se você preferir, mas relativos ao classpath é mais comum para aplicações empacotadas)
+dataConfigPath: data_config.yml
+featureConfigPath: feature_config.yml
+modelConfigPath: model_config.yml
+trainingConfigPath: training_config.yml
+databaseConfigPath: database_config.yml # Opcional, se você carregar DatabaseConfig diretamente via MLConfig

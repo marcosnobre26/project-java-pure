@@ -1,0 +1,42 @@
+# Configurações de Conexão com o Banco de Dados
+
+# Driver JDBC a ser usado.
+# Exemplos:
+#   PostgreSQL: org.postgresql.Driver
+#   MySQL: com.mysql.cj.jdbc.Driver (para MySQL 8.x e superior)
+#          com.mysql.jdbc.Driver (para MySQL 5.x)
+#   H2 (banco de dados embutido/memória): org.h2.Driver
+#   SQL Server: com.microsoft.sqlserver.jdbc.SQLServerDriver
+jdbcDriver: org.postgresql.Driver
+
+# URL de conexão JDBC.
+# Exemplos:
+#   PostgreSQL: jdbc:postgresql://localhost:5432/your_database_name
+#   MySQL: jdbc:mysql://localhost:3306/your_database_name
+#   H2 (arquivo): jdbc:h2:./data/your_database_name
+#   H2 (memória): jdbc:h2:mem:your_database_name
+#   SQL Server: jdbc:sqlserver://localhost:1433;databaseName=your_database_name
+jdbcUrl: jdbc:postgresql://localhost:5432/ml_project_db
+
+# Nome de usuário do banco de dados
+username: ml_user
+
+# Senha do banco de dados
+# ATENÇÃO: Em ambientes de produção, EVITE colocar senhas diretamente em arquivos versionados.
+# Use variáveis de ambiente (ex: ${DB_PASSWORD}) ou um sistema de gerenciamento de segredos.
+password: your_secure_password
+
+# Nome da tabela principal a ser usada para carregar dados (opcional, se você usar uma query específica)
+# Isso pode ser usado pelo DataLoader se você quiser uma forma simples de buscar a tabela inteira.
+tableName: training_data
+
+# Query SQL completa para buscar os dados (opcional, alternativa a tableName)
+# Se especificado, esta query será usada para buscar os dados.
+# Isso oferece mais flexibilidade para filtrar ou unir tabelas antes de carregar os dados.
+query: "SELECT age, education_num, capital_gain, workclass, marital_status, income_bracket FROM training_data WHERE status = 'active' ORDER BY id ASC"
+
+# Propriedades adicionais para a conexão JDBC (opcional)
+#connectionProperties:
+#  ssl: true
+#  autoReconnect: true
+#  serverTimezone: UTC

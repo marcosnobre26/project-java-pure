@@ -1,0 +1,8 @@
+# Configurações de Dados
+targetColumn: income # <<<< VERIFIQUE ESTA LINHA!
+sourceType: CSV      # <<<< VERIFIQUE ESTA LINHA!
+
+csvConfig:
+  filePath: C:/Users/marco/eclipse-workspace/project-java-pure/src/main/resources/data/adult_train.csv # Mantenha este caminho absoluto
+  hasHeader: true
+  separator: ';'

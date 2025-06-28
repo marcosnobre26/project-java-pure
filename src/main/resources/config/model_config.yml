@@ -1,0 +1,11 @@
+# src/main/resources/config/model_config.yml
+
+# Caminho para o arquivo onde o modelo treinado será salvo ou de onde será carregado.
+# (Note: Este é o mesmo tipo de caminho que você definiu em training_config.yml
+# para 'modelOutputPath'. Na sua aplicação atual, o modelTrainer salva para o
+# caminho definido em training_config.yml.
+# No entanto, se você fosse carregar um modelo já existente para predição,
+# este seria o local de onde ele viria.
+# Para evitar confusão e garantir que todas as configurações estejam mapeadas,
+# estamos mantendo este campo aqui.)
+modelOutputPath: target/model/weka-model.ser
