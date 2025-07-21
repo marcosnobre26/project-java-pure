@@ -7,175 +7,152 @@ import weka.core.Instance;
 import weka.core.Instances;
 import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.NominalToBinary;
-import weka.filters.unsupervised.attribute.Standardize;
 import weka.filters.unsupervised.attribute.ReplaceMissingValues;
+import weka.filters.unsupervised.attribute.Standardize;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.Serializable;
 import java.util.Map;
 import java.util.logging.Logger;
 
-public class FeatureExtractor {
+/**
+ * Classe responsável por pré-processar os dados.
+ * Implementa Serializable para que seu estado (filtros treinados e cabeçalhos)
+ * possa ser salvo em um arquivo e carregado posteriormente pela API.
+ */
+public class FeatureExtractor implements Serializable {
+
+    // ID de versão para garantir compatibilidade durante a serialização.
+    private static final long serialVersionUID = 2L;
 
     private static final Logger LOGGER = Logger.getLogger(FeatureExtractor.class.getName());
-    private FeatureConfig featureConfig;
-    private Instances headerInformation; // Armazena o cabeçalho final após o pré-processamento de treinamento
 
-    // Filtros Weka pré-configurados e treinados
+    // --- CORREÇÃO AQUI ---
+    // Marcamos o featureConfig como 'transient' para que ele seja ignorado
+    // durante o processo de salvar (serialização), resolvendo o erro.
+    private final transient FeatureConfig featureConfig;
+    
+    // Configurações e filtros que serão "treinados" e salvos.
+    private Instances rawDataHeader; // GUARDA A ESTRUTURA DOS DADOS BRUTOS (ESSENCIAL!)
     private NominalToBinary nominalToBinaryFilter;
     private Standardize standardizeFilter;
     private ReplaceMissingValues replaceMissingValuesFilter;
 
-
-    public FeatureExtractor(FeatureConfig featureConfig) throws Exception {
+    public FeatureExtractor(FeatureConfig featureConfig) {
         this.featureConfig = featureConfig;
-        LOGGER.info("Inicializando FeatureExtractor com configurações: " + featureConfig);
-
-        // Inicializa os filtros Weka
-        nominalToBinaryFilter = new NominalToBinary();
-        standardizeFilter = new Standardize();
-        replaceMissingValuesFilter = new ReplaceMissingValues();
+        LOGGER.info("Inicializando FeatureExtractor...");
     }
 
     /**
-     * Pré-processa um conjunto de dados brutos (treinamento ou teste).
+     * Pré-processa os dados de treinamento. Este método "treina" os filtros
+     * e armazena a estrutura dos dados.
      *
-     * @param rawData O conjunto de dados brutos.
+     * @param rawData O conjunto de dados de treinamento.
      * @return O conjunto de dados pré-processado.
-     * @throws Exception Se houver um erro durante o pré-processamento.
      */
     public Instances preprocess(Instances rawData) throws Exception {
-        LOGGER.info("Iniciando pré-processamento de dados...");
-        Instances processedData = new Instances(rawData); // Crie uma cópia para não modificar o original
+        LOGGER.info("Iniciando pré-processamento de dados de treinamento...");
+        // CRÍTICO: Armazena a estrutura dos dados BRUTOS para poder criar novas instâncias depois.
+        this.rawDataHeader = new Instances(rawData, 0);
 
-        // 1. Tratar valores ausentes (Missing Values)
-        if (featureConfig.isReplaceMissingValues()) { // Usando a propriedade do FeatureConfig
-            LOGGER.info("Aplicando filtro ReplaceMissingValues...");
+        Instances processedData = new Instances(rawData);
+
+        // 1. Tratar valores ausentes
+        if (featureConfig.isReplaceMissingValues()) {
+            LOGGER.info("Treinando e aplicando filtro ReplaceMissingValues...");
+            replaceMissingValuesFilter = new ReplaceMissingValues();
             replaceMissingValuesFilter.setInputFormat(processedData);
             processedData = Filter.useFilter(processedData, replaceMissingValuesFilter);
-            LOGGER.info("Filtro ReplaceMissingValues aplicado.");
         }
 
-
-        // 2. One-Hot Encoding para Categorical Features
-        // AQUI ESTÁ A CORREÇÃO: featureConfig.getCategoricalEncoding() AGORA RETORNA A STRING DIRETA
-        String categoricalEncodingStrategy = featureConfig.getCategoricalEncoding();
-        if (featureConfig.isOneHotEncodeCategorical() && "ONE_HOT_ENCODING".equalsIgnoreCase(categoricalEncodingStrategy)) {
-            LOGGER.info("Aplicando One-Hot Encoding para atributos categóricos...");
+        // 2. One-Hot Encoding para atributos categóricos
+        if (featureConfig.isOneHotEncodeCategorical()) {
+            LOGGER.info("Treinando e aplicando One-Hot Encoding...");
+            nominalToBinaryFilter = new NominalToBinary();
             nominalToBinaryFilter.setInputFormat(processedData);
             processedData = Filter.useFilter(processedData, nominalToBinaryFilter);
-            LOGGER.info("One-Hot Encoding aplicado.");
-        } else {
-            // Este warning será exibido se oneHotEncodeCategorical for false ou a estratégia não for ONE_HOT_ENCODING
-            LOGGER.warning("One-Hot Encoding não será aplicado. Configuração: oneHotEncodeCategorical=" +
-                           featureConfig.isOneHotEncodeCategorical() + ", strategy=" + categoricalEncodingStrategy);
         }
 
-        // 3. Normalização/Padronização de Features Numéricas (opcional, como exemplo)
-        // Exemplo com Standardize (Z-score normalization)
-        if (featureConfig.isStandardizeNumeric() && !featureConfig.getNumericalFeatures().isEmpty()) { // Usando a propriedade do FeatureConfig
-            LOGGER.info("Aplicando padronização (Standardize) para atributos numéricos...");
+        // 3. Padronização de atributos numéricos
+        if (featureConfig.isStandardizeNumeric()) {
+            LOGGER.info("Treinando e aplicando padronização (Standardize)...");
+            standardizeFilter = new Standardize();
             standardizeFilter.setInputFormat(processedData);
             processedData = Filter.useFilter(processedData, standardizeFilter);
-            LOGGER.info("Padronização aplicada.");
         }
 
-        // CRÍTICO: Armazena o headerInformation dos dados pré-processados
-        // Isso é essencial para pré-processar novas amostras e para o PredictionService
-        this.headerInformation = new Instances(processedData, 0); // Copia apenas a estrutura dos atributos
-        LOGGER.info("Pré-processamento concluído. Header information armazenado.");
+        LOGGER.info("Pré-processamento de treinamento concluído.");
         return processedData;
     }
 
     /**
-     * Pré-processa uma nova amostra (uma única instância) usando os filtros treinados.
-     * Esta é a versão usada para predição em tempo real.
-     * @param newSampleInstances O conjunto de dados contendo a nova amostra (geralmente uma única instância).
-     * @return O conjunto de dados com a amostra pré-processada.
-     * @throws Exception Se houver um erro durante o pré-processamento.
+     * Pré-processa UMA NOVA amostra usando os filtros JÁ TREINADOS.
+     *
+     * @param newRawInstance A nova instância de dados brutos a ser processada.
+     * @return A instância após passar por todos os filtros.
      */
-    public Instances preprocessNewSample(Instances newSampleInstances) throws Exception {
-        LOGGER.info("Iniciando pré-processamento de nova amostra...");
-        Instances preprocessedSample = new Instances(newSampleInstances); // Cópia
+    public Instances preprocessNewSample(Instance newRawInstance) throws Exception {
+        // Para aplicar filtros, precisamos de um objeto Instances, mesmo que para uma única linha.
+        Instances newDataSet = new Instances(this.rawDataHeader, 1);
+        newDataSet.add(newRawInstance);
 
-        // Aplique os mesmos filtros na mesma ordem que foram aplicados aos dados de treino
-        // Os filtros já foram treinados no método `preprocess` quando você passou os dados de treino
-        // e, portanto, retêm o estado necessário para transformar novas instâncias.
-
-        // 1. Tratar valores ausentes
-        if (featureConfig.isReplaceMissingValues()) {
-            replaceMissingValuesFilter.setInputFormat(preprocessedSample);
-            preprocessedSample = Filter.useFilter(preprocessedSample, replaceMissingValuesFilter);
+        // Aplica os filtros na mesma ordem, mas agora sem treiná-los novamente.
+        if (replaceMissingValuesFilter != null) {
+            newDataSet = Filter.useFilter(newDataSet, replaceMissingValuesFilter);
+        }
+        if (nominalToBinaryFilter != null) {
+            newDataSet = Filter.useFilter(newDataSet, nominalToBinaryFilter);
+        }
+        if (standardizeFilter != null) {
+            newDataSet = Filter.useFilter(newDataSet, standardizeFilter);
         }
 
-        // 2. One-Hot Encoding (se aplicado no treinamento)
-        String categoricalEncodingStrategy = featureConfig.getCategoricalEncoding();
-        if (featureConfig.isOneHotEncodeCategorical() && "ONE_HOT_ENCODING".equalsIgnoreCase(categoricalEncodingStrategy)) {
-            nominalToBinaryFilter.setInputFormat(preprocessedSample);
-            preprocessedSample = Filter.useFilter(preprocessedSample, nominalToBinaryFilter);
-        }
-
-        // 3. Normalização/Padronização (se aplicado no treinamento)
-        if (featureConfig.isStandardizeNumeric() && !featureConfig.getNumericalFeatures().isEmpty()) {
-            standardizeFilter.setInputFormat(preprocessedSample);
-            preprocessedSample = Filter.useFilter(preprocessedSample, standardizeFilter);
-        }
-
-        LOGGER.info("Pré-processamento da nova amostra concluído.");
-        return preprocessedSample;
+        return newDataSet;
     }
 
     /**
-     * Cria uma única instância Weka a partir de um mapa de dados brutos.
-     * Esta instância ainda precisará passar pelos filtros do FeatureExtractor.
+     * Cria uma instância Weka a partir de um mapa de dados (ex: vindo de um JSON).
+     * Usa o cabeçalho dos dados brutos que foi salvo durante o treinamento.
      *
-     * @param dataMap Um mapa onde as chaves são nomes de atributos e os valores são os dados brutos.
-     * @return Uma instância Weka (singular).
+     * @param dataMap Mapa com os nomes e valores dos atributos.
+     * @return Uma instância Weka pronta para ser pré-processada.
      */
     public Instance createWekaInstanceFromMap(Map<String, Object> dataMap) {
-        if (this.headerInformation == null) {
-            throw new IllegalStateException("Header information is not initialized. Preprocess training data first.");
+        if (this.rawDataHeader == null) {
+            throw new IllegalStateException("O extrator não foi treinado. Execute o preprocessamento com dados de treino primeiro.");
         }
 
-        Instance instance = new DenseInstance(this.headerInformation.numAttributes());
-        instance.setDataset(this.headerInformation); // VINCULA AO CABEÇALHO!
+        Instance instance = new DenseInstance(this.rawDataHeader.numAttributes());
+        instance.setDataset(this.rawDataHeader); // VINCULA AO CABEÇALHO DOS DADOS BRUTOS!
 
-        for (int i = 0; i < this.headerInformation.numAttributes(); i++) {
-            Attribute attr = this.headerInformation.attribute(i);
-            String attrName = attr.name();
-            Object value = dataMap.get(attrName);
+        for (int i = 0; i < this.rawDataHeader.numAttributes(); i++) {
+            Attribute attr = this.rawDataHeader.attribute(i);
+            Object value = dataMap.get(attr.name());
 
-            if (value != null) {
+            if (value == null) {
+                instance.setMissing(attr);
+                continue;
+            }
+
+            try {
                 if (attr.isNumeric()) {
-                    try {
-                        instance.setValue(attr, Double.parseDouble(value.toString()));
-                    } catch (NumberFormatException e) {
-                        instance.setMissing(attr);
-                        LOGGER.warning("Valor não numérico para atributo numérico '" + attrName + "': " + value);
-                    }
-                } else if (attr.isNominal() || attr.isString()) {
-                    if (attr.isNominal() && attr.indexOfValue(value.toString()) == -1) {
-                        instance.setMissing(attr);
-                        LOGGER.warning("Valor nominal '" + value + "' para atributo '" + attrName + "' não encontrado nos valores esperados. Marcando como ausente.");
-                    } else {
+                    instance.setValue(attr, Double.parseDouble(value.toString()));
+                } else if (attr.isNominal()) {
+                    // Para atributos nominais, o valor deve existir na lista de valores possíveis.
+                    // Se não existir, marcamos como ausente para o filtro ReplaceMissingValues tratar.
+                    if (attr.indexOfValue(value.toString()) != -1) {
                         instance.setValue(attr, value.toString());
+                    } else {
+                        instance.setMissing(attr);
+                        LOGGER.warning("Valor '" + value + "' não encontrado para o atributo nominal '" + attr.name() + "'. Marcando como ausente.");
                     }
                 } else {
-                    instance.setMissing(attr);
+                    instance.setValue(attr, value.toString());
                 }
-            } else {
+            } catch (Exception e) {
+                LOGGER.warning("Erro ao definir valor para o atributo '" + attr.name() + "'. Valor: " + value + ". Marcando como ausente. Erro: " + e.getMessage());
                 instance.setMissing(attr);
             }
         }
         return instance;
-    }
-
-    /**
-     * Retorna o cabeçalho do dataset após o pré-processamento.
-     * Essencial para o PredictionService e para a consistência dos dados.
-     * @return As informações de cabeçalho (estrutura dos atributos).
-     */
-    public Instances getHeaderInformation() {
-        return headerInformation;
     }
 }
